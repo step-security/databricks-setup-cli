@@ -1,0 +1,82 @@
+name: StepSecurity Setup Databricks CLI
+description: Install the Databricks CLI.
+author: step-security
+inputs:
+  version:
+    description: >-
+      Specific Databricks CLI version to install (for example "1.1.0"). Leave
+      empty to install the default pinned version from the action's VERSION
+      file.
+    required: false
+  snapshot:
+    description: >-
+      Set to "true" to install a snapshot build instead of a tagged release.
+    required: false
+  branch:
+    description: >-
+      Branch whose snapshot build to install. Only consulted when snapshot is
+      "true". Defaults to "main" when empty.
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - name: StepSecurity subscription check
+      shell: bash
+      env:
+        REPO_PRIVATE: ${{ github.event.repository.private }}
+      run: |
+        UPSTREAM="databricks/setup-cli"
+        ACTION_REPO="${GITHUB_ACTION_REPOSITORY:-}"
+        DOCS_URL="https://docs.stepsecurity.io/actions/stepsecurity-maintained-actions"
+
+        echo ""
+        printf '\033[1;36mStepSecurity Maintained Action\033[0m\n'
+        echo "Secure drop-in replacement for $UPSTREAM"
+        if [ "$REPO_PRIVATE" = "false" ]; then
+          printf '\033[32m✓ Free for public repositories\033[0m\n'
+        fi
+        printf '\033[36mLearn more:\033[0m %s\n' "$DOCS_URL"
+        echo ""
+
+        if [ "$REPO_PRIVATE" != "false" ]; then
+          SERVER_URL="${GITHUB_SERVER_URL:-https://github.com}"
+          if [ "$SERVER_URL" != "https://github.com" ]; then
+            BODY=$(printf '{"action":"%s","ghes_server":"%s"}' "$ACTION_REPO" "$SERVER_URL")
+          else
+            BODY=$(printf '{"action":"%s"}' "$ACTION_REPO")
+          fi
+
+          API_URL="https://agent.api.stepsecurity.io/v1/github/$GITHUB_REPOSITORY/actions/maintained-actions-subscription"
+          RESPONSE=$(curl --max-time 3 -s -w "%{http_code}" \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -d "$BODY" \
+            "$API_URL" -o /dev/null) && CURL_EXIT_CODE=0 || CURL_EXIT_CODE=$?
+
+          if [ "$CURL_EXIT_CODE" -ne 0 ]; then
+            echo "Timeout or API not reachable. Continuing to next step."
+          elif [ "$RESPONSE" = "403" ]; then
+            printf '::error::\033[1;31mThis action requires a StepSecurity subscription for private repositories.\033[0m\n'
+            printf '::error::\033[31mLearn how to enable a subscription: %s\033[0m\n' "$DOCS_URL"
+            exit 1
+          fi
+        fi
+
+    - name: Install Databricks CLI
+      shell: bash
+      env:
+        SC_VERSION: ${{ inputs.version }}
+        SC_BRANCH: ${{ inputs.branch }}
+        SC_SNAPSHOT: ${{ inputs.snapshot }}
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        if [ "${SC_SNAPSHOT:-}" = "true" ]; then
+          bash "$GITHUB_ACTION_PATH/scripts/install-from-snapshot.sh"
+        else
+          bash "$GITHUB_ACTION_PATH/scripts/install-from-release.sh"
+        fi
+
+    - name: Verify install
+      shell: bash
+      run: databricks version
