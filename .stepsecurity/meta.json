@@ -1,0 +1,18 @@
+{
+   "schema_version": "1",
+   "onboarding_type": "reimplemented",
+   "archived": false,
+   "maintained_action_name": "step-security/databricks-setup-cli",
+   "upstream_full_repo_name": "databricks/setup-cli",
+   "action_type": "composite",
+   "last_release": {
+     "tag_name": "v1.1.0",
+     "created_at": "2026-06-04T06:34:51Z",
+     "published_at": "2026-06-05T05:41:19Z"
+   },
+   "sync": {
+     "ignore_presets": [
+       "defaults_v1"
+     ]
+   }
+ }
