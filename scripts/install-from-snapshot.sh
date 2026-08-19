@@ -44,9 +44,8 @@ main() {
   local artifact_name binary_subdir work_dir download_dir run_id binary_dir
   artifact_name="cli_${host_os}_snapshot"
   binary_subdir="cli_${host_os}_${arch_suffix}"
-  work_dir="${RUNNER_TEMP:?RUNNER_TEMP must be set inside a GitHub Actions step}"
-  download_dir="$work_dir/databricks-cli-snapshot"
-  mkdir -p "$download_dir"
+  work_dir="$(mktemp -d "${RUNNER_TEMP:?RUNNER_TEMP must be set inside a GitHub Actions step}/databricks.XXXXXX")"
+  download_dir="$work_dir"
 
   printf 'databricks-setup-cli: resolving latest %s snapshot on %s\n' \
     "$UPSTREAM_REPO" "$target_branch"
