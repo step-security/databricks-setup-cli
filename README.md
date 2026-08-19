@@ -17,7 +17,7 @@ Install a specific version:
 ```yaml
 - uses: step-security/databricks-setup-cli@v1
   with:
-    version: 1.1.0
+    version: 1.12.1
 ```
 
 Install a snapshot build produced by the `release-snapshot` workflow in `databricks/cli`:

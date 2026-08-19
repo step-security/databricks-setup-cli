@@ -100,9 +100,9 @@ main() {
   archive_name="databricks_cli_${cli_version}_${host_os}_${host_arch}.zip"
   archive_url="${GH_RELEASE_HOST}/v${cli_version}/${archive_name}"
 
-  work_dir="${RUNNER_TEMP:?RUNNER_TEMP must be set inside a GitHub Actions step}"
+  work_dir="$(mktemp -d "${RUNNER_TEMP:?RUNNER_TEMP must be set inside a GitHub Actions step}/databricks.XXXXXX")"
   archive_path="$work_dir/$archive_name"
-  extract_dir="$work_dir/databricks-cli"
+  extract_dir="$work_dir/extract"
   mkdir -p "$extract_dir"
 
   printf 'databricks-setup-cli: fetching %s\n' "$archive_url"
